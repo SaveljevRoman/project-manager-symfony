@@ -1,0 +1,49 @@
+FROM php:7.4-fpm
+
+WORKDIR /home/apps
+
+RUN groupadd -g 1000 apps && \
+    groupmod -n apps $(grep 1000 /etc/group | cut -d ':' -f1) && \
+    useradd -m -g 1000 -s /bin/bash -u 1000 apps && \
+    usermod -aG apps www-data && \
+    usermod -aG www-data apps  &&\
+    echo "apps:123" | chpasswd && \
+    chown -R apps:apps /home/apps && \
+    mkdir /home/apps/files && \
+    chown -R apps:apps /home/apps/files
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+RUN apt-get update && \
+    apt-get install -y \
+    librabbitmq-dev \
+    libzip-dev \
+    libssh-dev \
+    libpq-dev  \
+    redis \
+    unzip \
+    git \
+    zip
+
+RUN docker-php-ext-install opcache bcmath sockets
+
+RUN docker-php-ext-install pdo pdo_pgsql
+
+RUN pecl install amqp && docker-php-ext-enable amqp
+
+RUN pecl install redis && docker-php-ext-enable redis
+
+RUN pecl install xdebug-2.9.8 && \
+    docker-php-ext-enable xdebug && \
+    { \
+    echo "xdebug.remote_enable=1"; \
+    echo "xdebug.remote_port=9003"; \
+    echo "xdebug.remote_autostart=1"; \
+    echo "xdebug.remote_connect_back=0"; \
+    echo "xdebug.idekey=editor-xdebug"; \
+    echo "xdebug.remote_host=XDEBUG_CONFIG"; \
+    echo "xdebug.mode=debug"; \
+    } > /usr/local/etc/php/conf.d/xdebug.ini;
+
+EXPOSE 9000
+CMD ["php-fpm"]

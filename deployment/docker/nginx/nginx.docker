@@ -1,0 +1,13 @@
+FROM nginx:1.21
+
+WORKDIR /home/apps
+
+RUN groupadd -g 1000 apps && \
+    groupmod -n apps $(grep 1000 /etc/group | cut -d ':' -f1) && \
+    useradd -m -g 1000 -s /bin/bash -u 1000 apps && \
+    usermod -aG apps www-data && \
+    usermod -aG www-data apps  &&\
+    echo "apps:123" | chpasswd && \
+    chown -R apps:apps /home/apps && \
+    mkdir /home/apps/files && \
+    chown -R apps:apps /home/apps/files

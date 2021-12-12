@@ -1,0 +1,74 @@
+version: '3.7'
+x-php:
+  &php-context
+  context: ./php7.4-fpm/
+  dockerfile: php7.4-fpm.docker
+
+x-nginx:
+  &nginx-context
+  context: ./nginx/
+  dockerfile: nginx.docker
+
+x-volumes:
+  - &app-manager    ${PROJECT_PATH}/manager:/home/apps # прокидываем локальную директорию : в контейнер
+  - &app-nginx      ${PROJECT_PATH}/deployment/docker/nginx/conf.d/:/etc/nginx/conf.d/ # прокидываем конфиги nginx:в контейнер
+
+services:
+  nginx:
+    build:
+      <<: *nginx-context # ссылка на context и dockerfile для данного образа
+    image: nginx:1.21 # имя образа
+    volumes:
+      - *app-manager  # ссылка на x-volumes
+      - *app-nginx # ссылка на x-volumes
+    ports:
+      - "80:80" # прокидывем порты наружний:внутренний
+    depends_on:
+      - manager # запускаем после контейнеров работающих на образе php
+
+  postgres:
+    image: postgres:14 # dockerfile не нужен, поскольку docker-compose сам возьмет нужную версию из dockerhub postgres
+    environment:
+      # Данные для БД постгреса
+      POSTGRES_DB: manager # имя бд
+      POSTGRES_USER: postgres # юзер
+      POSTGRES_PASSWORD: root # пароль
+      PGTZ: 'Europe/Moscow'
+      TZ: 'Europe/Moscow'
+    ports:
+      - "54321:5432" # прокидываем наружу порт 54321, поскольку бд может быть не одна
+    volumes: # создаем volume что бы не терять данные при stop/down
+      - pgsql-data:/var/lib/postgresql/data
+
+  redis:
+    # внутри контейнеров коннект к редису осуществляем $redis->connect('172.17.0.1', 6379);
+    image: redis:latest
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672" # для подключения к рабочей среде rabbitmq
+      - "15672:15672" # для подключения к графической оболочке http://localhost:15672/
+    environment:
+      - RABBITMQ_SERVER=rabbitmq
+      - RABBITMQ_DEFAULT_USER=guest # юзер
+      - RABBITMQ_DEFAULT_PASS=guest # пароль
+
+  manager:
+    build:
+      <<: *php-context
+    image: php:7.4
+    volumes:
+      - *app-manager
+    environment:
+      XDEBUG_CONFIG: remote_host=${XDEBUG_REMOTE_HOST} # устанавливаем локальный адрес докера
+
+volumes: # алиасы volumes
+  pgsql-data: # алиас постгреса
+    driver: local
+  redis-data: # алиас редиса
+    driver: local
