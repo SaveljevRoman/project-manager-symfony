@@ -4,35 +4,42 @@ declare(strict_types=1);
 
 namespace App\Model\User\UseCase\SignUp\Request;
 
-use Doctrine\ORM\EntityManagerInterface;
+use App\Model\Flusher;
+use App\Model\User\Entity\User\Email;
+use App\Model\User\Entity\User\Id;
 use App\Model\User\Entity\User\User;
-use Ramsey\Uuid\Uuid;
+use App\Model\User\Entity\User\UserRepository;
+use App\Model\User\Service\PasswordHasher;
 
 class Handler
 {
-    private EntityManagerInterface $em;
+    private UserRepository $userRepository;
+    private PasswordHasher $passwordHasher;
+    private Flusher $flusher;
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(UserRepository $userRepository, PasswordHasher $passwordHasher, Flusher $flusher)
     {
-        $this->em = $em;
+        $this->userRepository = $userRepository;
+        $this->passwordHasher = $passwordHasher;
+        $this->flusher = $flusher;
     }
 
     public function handle(Command $command): void
     {
-        $email = mb_strtolower($command->email);
+        $email = new Email($command->email);
 
-        if ($this->em->getRepository(User::class)->findOneBy(['email' => $email])) {
+        if ($this->userRepository->hasByEmail($email)) {
             throw new \DomainException('User already exists.');
         }
 
         $user = new User(
-            Uuid::uuid4()->toString(),
+            Id::next(),
             $email,
-            password_hash($command->password, PASSWORD_ARGON2I),
+            $this->passwordHasher->hash($command->password),
             new \DateTimeImmutable()
         );
 
-        $this->em->persist($user);
-        $this->em->flush();
+        $this->userRepository->add($user);
+        $this->flusher->flush();
     }
 }

@@ -6,27 +6,12 @@ namespace App\Model\User\Entity\User;
 
 class User
 {
-    /**
-     * @var string
-     */
-    private string $id;
-
-    /**
-     * @var string
-     */
-    private string $email;
-
-    /**
-     * @var string
-     */
+    private Id $id;
+    private Email $email;
     private string $passwordHash;
-
-    /**
-     * @var \DateTimeImmutable
-     */
     private \DateTimeImmutable $created_at;
 
-    public function __construct(string $id, string $email, string $passwordHash, \DateTimeImmutable $created_at)
+    public function __construct(Id $id, Email $email, string $passwordHash, \DateTimeImmutable $created_at)
     {
         $this->id = $id;
         $this->email = $email;
@@ -34,12 +19,12 @@ class User
         $this->created_at = $created_at;
     }
 
-    public function getId(): string
+    public function getId(): Id
     {
         return $this->id;
     }
 
-    public function getEmail(): string
+    public function getEmail(): Email
     {
         return $this->email;
     }
