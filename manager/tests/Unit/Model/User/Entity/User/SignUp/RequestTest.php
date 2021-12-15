@@ -28,6 +28,6 @@ class RequestTest extends TestCase
         self::assertEquals($email, $user->getEmail());
         self::assertEquals($passwordHash, $user->getPasswordHash());
         self::assertEquals($created_at, $user->getCreatedAt());
-        self::assertEquals($token, $user->getToken());
+        self::assertEquals($token, $user->getConfirmToken());
     }
 }

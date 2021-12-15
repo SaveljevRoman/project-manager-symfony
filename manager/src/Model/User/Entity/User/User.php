@@ -13,7 +13,7 @@ class User
     private Email $email;
     private string $passwordHash;
     private \DateTimeImmutable $created_at;
-    private string $confirmToken;
+    private ?string $confirmToken;
     private string $status;
 
     public function __construct(Id $id, Email $email, string $passwordHash, \DateTimeImmutable $created_at, string $token)
@@ -24,6 +24,16 @@ class User
         $this->created_at = $created_at;
         $this->confirmToken = $token;
         $this->status = self::STATUS_WAIT;
+    }
+
+    public function confirmSignUp(): void
+    {
+        if (!$this->isWait()) {
+            throw new \DomainException('User is already confirmed.');
+        }
+
+        $this->status = self::STATUS_ACTIVE;
+        $this->confirmToken = null;
     }
 
     public function isWait(): bool
@@ -56,7 +66,7 @@ class User
         return $this->created_at;
     }
 
-    public function getToken(): ?string
+    public function getConfirmToken(): ?string
     {
         return $this->confirmToken;
     }
