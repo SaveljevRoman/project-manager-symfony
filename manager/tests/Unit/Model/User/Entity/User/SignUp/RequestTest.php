@@ -15,9 +15,12 @@ class RequestTest extends TestCase
     {
         $user = new User(
             $id = Id::next(),
+            $created_at = new \DateTimeImmutable(),
+        );
+
+        $user->signUpByEmail(
             $email = new Email('test@app.test'),
             $passwordHash = 'passwordHash',
-            $created_at = new \DateTimeImmutable(),
             $token = 'token'
         );
 
@@ -29,5 +32,22 @@ class RequestTest extends TestCase
         self::assertEquals($passwordHash, $user->getPasswordHash());
         self::assertEquals($created_at, $user->getCreatedAt());
         self::assertEquals($token, $user->getConfirmToken());
+    }
+
+    public function testAlready():void {
+        $user = new User(
+            $id = Id::next(),
+            $date = new \DateTimeImmutable()
+        );
+
+        $user->signUpByEmail(
+            $email = new Email('test@app.test'),
+            $hash = 'hash',
+            $token = 'token'
+        );
+
+        $this->expectExceptionMessage('User is already signed up.');
+
+        $user->signUpByEmail($email, $hash, $token);
     }
 }

@@ -41,6 +41,7 @@ RUN pecl install xdebug-2.9.8 && \
     echo "xdebug.remote_autostart=1"; \
     echo "xdebug.remote_connect_back=0"; \
     echo "xdebug.idekey=editor-xdebug"; \
+    echo "xdebug.extended_info = 1"; \
     echo "xdebug.remote_host=XDEBUG_CONFIG"; \
     echo "xdebug.mode=debug"; \
     } > /usr/local/etc/php/conf.d/xdebug.ini;

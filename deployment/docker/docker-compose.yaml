@@ -66,6 +66,7 @@ services:
       - *app-manager
     environment:
       XDEBUG_CONFIG: remote_host=${XDEBUG_REMOTE_HOST} # устанавливаем локальный адрес докера
+      PHP_IDE_CONFIG: serverName=project-manager.local # это имя находится в настройках /file/settings/PHP/service
 
 volumes: # алиасы volumes
   pgsql-data: # алиас постгреса
