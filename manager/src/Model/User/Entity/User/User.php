@@ -17,6 +17,7 @@ class User
     private ?string $passwordHash;
     private \DateTimeImmutable $created_at;
     private ?string $confirmToken;
+    private ?ResetToken $resetToken;
     private string $status;
 
     /**
@@ -75,6 +76,19 @@ class User
         $this->network->add(new Network($this, $network, $identity));
     }
 
+    public function requestPasswordReset(ResetToken $resetToken, \DateTimeImmutable $date): void
+    {
+        if (empty($this->email)) {
+            throw new \DomainException('Email is not specified.');
+        }
+
+        if (!empty($this->resetToken) && !$this->resetToken->isExpired($date)) {
+            throw new \DomainException('Resetting is already requested.');
+        }
+
+        $this->resetToken = $resetToken;
+    }
+
     public function isWait(): bool
     {
         return $this->status === self::STATUS_WAIT;
@@ -113,6 +127,11 @@ class User
     public function getConfirmToken(): ?string
     {
         return $this->confirmToken;
+    }
+
+    public function getResetToken(): ?ResetToken
+    {
+        return $this->resetToken;
     }
 
     public function getNetwork(): array
