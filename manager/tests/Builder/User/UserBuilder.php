@@ -53,30 +53,34 @@ class UserBuilder
 
     public function build(): User
     {
-        $user = new User(
-            $this->id,
-            $this->date
-        );
-
         if (isset($this->email)) {
-            $user->signUpByEmail(
+
+            $user = User::signUpByEmail(
+                $this->id,
+                $this->date,
                 $this->email,
                 $this->hash,
                 $this->token
             );
 
-            if (!empty($this->confirmed)) {
+            if (isset($this->confirmed)) {
                 $user->confirmSignUp();
             }
+
+            return $user;
         }
 
         if (isset($this->network)) {
-            $user->signUpByNetwork(
+            $user = User::signUpByNetwork(
+                $this->id,
+                $this->date,
                 $this->network,
                 $this->identity
             );
+
+            return $user;
         }
 
-        return $user;
+        throw new \BadMethodCallException('Specify via method.');
     }
 }

@@ -25,24 +25,27 @@ class User
      */
     private $network;
 
-    public function __construct(Id $id, \DateTimeImmutable $created_at)
+    private function __construct(Id $id, \DateTimeImmutable $created_at)
     {
         $this->id = $id;
         $this->created_at = $created_at;
-        $this->status = self::STATUS_NEW;
         $this->network = new ArrayCollection();
     }
 
-    public function signUpByEmail(Email $email, string $passwordHash, string $confirmToken): void
+    public static function signUpByEmail(
+        Id                 $id,
+        \DateTimeImmutable $created_at,
+        Email              $email,
+        string             $passwordHash,
+        string             $confirmToken
+    ): self
     {
-        if (!$this->isNew()) {
-            throw new \DomainException('User is already signed up.');
-        }
-
-        $this->email = $email;
-        $this->passwordHash = $passwordHash;
-        $this->confirmToken = $confirmToken;
-        $this->status = self::STATUS_WAIT;
+        $user = new self($id, $created_at);
+        $user->email = $email;
+        $user->passwordHash = $passwordHash;
+        $user->confirmToken = $confirmToken;
+        $user->status = self::STATUS_WAIT;
+        return $user;
     }
 
     public function confirmSignUp(): void
@@ -55,14 +58,17 @@ class User
         $this->confirmToken = null;
     }
 
-    public function signUpByNetwork(string $network, string $identity): void
+    public static function signUpByNetwork(
+        Id                 $id,
+        \DateTimeImmutable $created_at,
+        string             $network,
+        string             $identity
+    ): self
     {
-        if (!$this->isNew()) {
-            throw new \DomainException('User is already signed up.');
-        }
-
-        $this->attachNetwork($network, $identity);
-        $this->status = self::STATUS_ACTIVE;
+        $user = new self($id, $created_at);
+        $user->attachNetwork($network, $identity);
+        $user->status = self::STATUS_ACTIVE;
+        return $user;
     }
 
     public function attachNetwork(string $network, string $identity): void
