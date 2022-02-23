@@ -23,7 +23,7 @@ class Handler
 
     public function handle(Command $command): void
     {
-        if (!$user = $this->userRepository->findByConfirmToken($command->token)) {
+        if (!$user = $this->userRepository->findByResetToken($command->token)) {
             throw new \DomainException('Incorrect or confirmed token.');
         }
 
