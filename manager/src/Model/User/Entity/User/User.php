@@ -5,24 +5,74 @@ declare(strict_types=1);
 namespace App\Model\User\Entity\User;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks
+ * @ORM\Table(name="user_users", uniqueConstraints={
+ *     @ORM\UniqueConstraint(columns={"email"}),
+ *     @ORM\UniqueConstraint(columns={"reset_token_token"})
+ * })
+ */
 class User
 {
     private const STATUS_NEW = 'new';
     private const STATUS_WAIT = 'wait';
     private const STATUS_ACTIVE = 'active';
 
+    /**
+     * @var Id
+     * @ORM\Column(type="user_user_id")
+     * @ORM\Id
+     */
     private Id $id;
+
+    /**
+     * @var Email|null
+     * @ORM\Column(type="user_user_email", nullable=true)
+     */
     private ?Email $email;
+
+    /**
+     * @var string|null
+     * @ORM\Column(type="string", name="password_hash", nullable=true)
+     */
     private ?string $passwordHash;
+
+    /**
+     * @var \DateTimeImmutable
+     * @ORM\Column(type="datetime_immutable")
+     */
     private \DateTimeImmutable $created_at;
+
+    /**
+     * @var string|null
+     * @ORM\Column(type="string", name="confirm_token", nullable=true)
+     */
     private ?string $confirmToken;
+
+    /**
+     * @var ResetToken|null
+     * @ORM\Embedded(class="ResetToken", columnPrefix="reset_token_")
+     */
     private ?ResetToken $resetToken;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", length=16)
+     */
     private string $status;
+
+    /**
+     * @var Role
+     * @ORM\Column(type="user_user_role", length=16)
+     */
     private Role $role;
 
     /**
      * @var Network[]|ArrayCollection
+     * @ORM\OneToMany(targetEntity="Network", mappedBy="user", orphanRemoval=true, cascade={"persist"})
      */
     private $network;
 
@@ -177,5 +227,15 @@ class User
     public function getRole(): Role
     {
         return $this->role;
+    }
+
+    /**
+     * @ORM\PostLoad()
+     */
+    public function checkEmbeds(): void
+    {
+        if ($this->resetToken->isEmpty()) {
+            $this->resetToken = null;
+        }
     }
 }
