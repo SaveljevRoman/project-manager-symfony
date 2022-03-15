@@ -17,7 +17,7 @@ class SignUpController extends AbstractController
 
     public function __construct(LoggerInterface $logger)
     {
-//        $this->logger = $logger;
+        $this->logger = $logger;
     }
 
     /**
